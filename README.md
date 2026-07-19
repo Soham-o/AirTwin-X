@@ -16,11 +16,11 @@
   </pre>
   
   <p><i>Because knowing the AQI number is not the same as knowing what to do about it.</i></p>
+  
   <!-- Fixed Streamlit Badge & Hackathon Badge -->
-  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-  <br>
   [![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://airtwin-x.streamlit.app)
-  <br>
+  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+  <br><br>
 
   <!-- App Screenshot / GIF Animation Placeholder -->
   <!-- ⚠️ INSTRUCTION: Drop your screen recording GIF into an 'assets' folder in your repo and name it 'demo.gif' -->
