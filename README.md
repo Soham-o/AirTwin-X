@@ -19,7 +19,6 @@
   
   <!-- Fixed Streamlit Badge & Hackathon Badge -->
   [![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://airtwin-x.streamlit.app)
-  [![Built for MIT Hackathon](https://img.shields.io/badge/MIT%20Hackathon-Grand%20Prize%20Design-8A2BE2?style=for-the-badge)](https://github.com/Soham-o/AirTwin-X)
 
   <br><br>
 
