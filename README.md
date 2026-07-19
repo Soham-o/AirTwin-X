@@ -16,10 +16,9 @@
   </pre>
   
   <p><i>Because knowing the AQI number is not the same as knowing what to do about it.</i></p>
-  
   <!-- Fixed Streamlit Badge & Hackathon Badge -->
+  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
   [![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://airtwin-x.streamlit.app)
-
   <br><br>
 
   <!-- App Screenshot / GIF Animation Placeholder -->
