@@ -14,7 +14,6 @@
   
   [![Streamlit App](https://static.streamlit.io/badge_svg.svg)](https://airtwin-x.streamlit.app)
   [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-  [![Built for MIT Hackathon](https://img.shields.io/badge/MIT%20Hackathon-Grand%20Prize%20Design-blueviolet)](https://github.com/Soham-o/AirTwin-X)
 </div>
 
 ---
