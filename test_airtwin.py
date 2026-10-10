@@ -341,7 +341,7 @@ class TestFirmsConfiguration:
 
         class Response:
             status_code = 200
-            text = "latitude,longitude,frp\\n28.6,77.2,5.0\\n"
+            text = "latitude,longitude,frp\n28.6,77.2,5.0\n"
 
         def fake_get(url, timeout):
             requested["url"] = url
