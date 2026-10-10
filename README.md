@@ -67,37 +67,29 @@ AirTwin X treats the problem as a **decision pipeline** instead:
 
 ## System architecture
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                        DATA INGESTION                           │
-│  [Open-Meteo]   [WAQI API]   [NASA FIRMS]   [OpenStreetMap]     │
-└────────┬─────────────┬─────────────┬──────────────┬─────────────┘
-         ▼             ▼             ▼              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 GEOSPATIAL SOURCE ATTRIBUTION                   │
-│         (Traffic, Industrial, Construction, Biomass)            │
-└────────────────────────────────┬────────────────────────────────┘
-                                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  INTERVENTION RANKING (MCDA)                    │
-│            (Impact, Cost, Feasibility, Confidence, Speed)       │
-└────────────────────────────────┬────────────────────────────────┘
-                                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    SCENARIO SIMULATION                          │
-│              (Overlap-compounding, capped reduction)            │
-└────────────────────────────────┬────────────────────────────────┘
-                                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                HEALTH & ECONOMIC IMPACT ENGINE                  │
-│        (Admissions avoided, DALYs, estimated savings)           │
-└────────────────────────────────┬────────────────────────────────┘
-                                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│             MAYOR COPILOT & COMMAND CENTER (UI)                 │
-│           (Rule-based answers grounded in the above)            │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Data["Data sources"]
+        W[WAQI sensors]
+        M[Open-Meteo weather]
+        F[NASA FIRMS fires]
+        O[OpenStreetMap roads]
+    end
+    W -. no token .-> SIM[Simulated sensor data]
+    F -. no key .-> HEU[Weather-based fire heuristic]
+    Data --> A["Source attribution<br/><code>attribute()</code><br/>% by traffic, construction,<br/>industry, biomass, weather"]
+    SIM --> A
+    HEU --> A
+    A --> R["Intervention ranking<br/><code>generate()</code><br/>8 interventions, weighted score"]
+    R --> T["Scenario simulation<br/><code>simulate_scenario()</code><br/>effects compound, capped at 85%"]
+    T --> H["Health and economic impact<br/><code>assess()</code><br/>admissions, DALYs, savings"]
+    A & R & T & H --> C["Mayor Copilot<br/><code>ask()</code><br/>rule-based answers, no LLM"]
+    C --> UI[Streamlit command center]
 ```
+
+Each stage is a plain Python module with its own tests, and every number the
+Copilot reports comes from an earlier stage rather than a language model.
+Dotted lines are the fallbacks used when a token or key is not configured.
 
 See [Architecture.md](Architecture.md) for each module's inputs, outputs and
 design decisions.
