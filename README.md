@@ -2,134 +2,172 @@
 
 # AirTwin X
 
-**AI-Powered Urban Intervention Operating System**
+**A Streamlit decision-support prototype for urban air-quality interventions**
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://airtwin-x.streamlit.app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Stars](https://img.shields.io/github/stars/Soham-o/AirTwin-X?style=for-the-badge&color=yellow)](https://github.com/Soham-o/AirTwin-X/stargazers)
-[![Deployment](https://img.shields.io/badge/Deployment-Live-success?style=for-the-badge)](#)
-
-<br>
-
-<!-- ⚠️ INSTRUCTION: Drop your banner image into an 'assets' folder and name it 'banner.png' -->
-<img src="https://raw.githubusercontent.com/Soham-o/AirTwin-X/main/assets/banner.png" onerror="this.onerror=null; this.src='https://placehold.co/1000x300/1e1e1e/4caf50?text=AirTwin+X+Banner\\n(Upload+banner.png+to+/assets/)';" alt="AirTwin X Banner" width="100%" style="border-radius: 12px;">
-
-<br>
-
-<!-- ⚠️ INSTRUCTION: Drop your screen recording GIF into an 'assets' folder and name it 'demo.gif' -->
-<img src="https://raw.githubusercontent.com/Soham-o/AirTwin-X/main/assets/demo.gif" onerror="this.onerror=null; this.src='https://placehold.co/800x450/1e1e1e/4caf50?text=AirTwin+X+Demo\\n(Upload+demo.gif+to+/assets/)';" alt="AirTwin X App Interface" width="85%" style="border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
-
-<br>
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Status: prototype](https://img.shields.io/badge/status-prototype-orange?style=flat-square)](#project-status)
 
 </div>
 
+AirTwin X takes a city's current air-quality reading and walks it through a
+pipeline: estimate which sources are driving the pollution, rank a fixed set
+of municipal interventions, simulate what combining them would do, and
+translate the predicted improvement into health and economic estimates. A
+rule-based "Mayor Copilot" answers questions using only the outputs of those
+earlier steps.
+
+> **Screenshots / demo GIF:** not yet captured. Run it locally with the
+> [Quick Start](#quick-start) to see the interface.
+
 ---
 
-## Table of Contents
+## Contents
 
-- [The Story of AirTwin X](#the-story-of-airtwin-x)
-- [Why AirTwin X?](#why-airtwin-x)
-- [Core Features](#core-features)
-- [System Architecture](#system-architecture)
-- [AI Pipeline & Algorithms](#ai-pipeline--algorithms)
-- [Technology Stack](#technology-stack)
-- [Installation & Configuration](#installation--configuration)
-- [Interface Previews](#interface-previews)
-- [Documentation](#documentation)
+- [The idea](#the-idea)
+- [What it does](#what-it-does)
+- [System architecture](#system-architecture)
+- [Quick Start](#quick-start)
+- [Data sources and configuration](#data-sources-and-configuration)
 - [Testing](#testing)
-- [Roadmap & Future Work](#roadmap--future-work)
-- [Known Limitations](#known-limitations)
-- [Contributing](#contributing)
-- [License & Contact](#license--contact)
+- [Project status](#project-status)
+- [Known limitations](#known-limitations)
+- [Documentation](#documentation)
 
 ---
 
-## The Story of AirTwin X
+## The idea
 
-### What problem existed?
-Every major metropolis in the developing world faces a perpetual environmental crisis. Open any municipal dashboard today, and it will passively tell you the current Air Quality Index (AQI) number alongside a generic warning to "avoid outdoor activities." Standard monitoring infrastructure is fundamentally diagnostic, leaving city administrators blind to critical operational realities.
+Most city AQI dashboards report a number and a generic warning, then stop.
+They describe the problem but don't help anyone decide what to do about it.
+Simply wrapping a large language model around a sensor feed doesn't fix that
+either: a generative model can produce confident but untraceable impact
+estimates, and will often add intervention effects together as if they were
+independent.
 
-### Why existing solutions failed?
-Previous attempts to solve this typically fall into two traps. First, standard dashboards are passive—they observe the crisis but offer no actionable mechanics to solve it. Second, recent "AI for AQI" projects simply wrap a Large Language Model around a raw sensor feed. These models confidently hallucinate intervention impacts, blindly add percentages together without respecting physical constraints, and fail to provide traceable, mathematically rigorous reasoning for civic resource allocation.
+AirTwin X treats the problem as a **decision pipeline** instead:
 
-### What insight led to the idea?
-AirTwin X was built on a core realization: **a city needs a decision pipeline, not just an observation deck.** Simulating interventions requires strict non-linear mathematics—if two policies target traffic, their impacts overlap and compound; they do not simply add up. Furthermore, an AI assistant for a city Mayor cannot be generative; it must be deterministic. Every metric, citation, and recommendation must be inextricably linked to verifiable epidemiological and economic data.
+- When two interventions target the same pollution source, their effects
+  **compound** rather than add: the remaining share of a source is
+  `Π (1 − effectiveness_i)`, and the combined reduction is capped.
+- Every number the Copilot reports comes from an upstream module's output.
+  It does not generate free-form text from a language model.
 
-### What was built?
-We engineered an AI-powered Urban Intervention Operating System. It is a fully decoupled chain of six stateless Python micro-modules orchestrated through a low-latency Streamlit interface. It bridges the gap between environmental data and civic execution.
+## What it does
 
-### What makes it unique?
-It answers the *Why* and the *How*. Instead of asking "What is the AQI?", AirTwin X determines which geospatial source is responsible, which specific GRAP-aligned intervention provides the highest ROI, and exactly how many citizens will benefit. Every executive brief is backed by immutable dataclass citations using algebraic overlap-compounding logic.
+| Module | File | What is implemented |
+|---|---|---|
+| **Source attribution** | `attribution_engine.py` | Splits current AQI into Traffic, Construction, Industrial, Biomass Burning and Weather Amplification percentages using OpenStreetMap road data, weather telemetry and fire-hotspot data, with a confidence score and the list of data sources actually used. |
+| **Intervention ranking** | `intervention_agent.py` | Scores 8 predefined interventions with a weighted multi-criteria formula (AQI impact 0.40, cost 0.20, feasibility 0.20, confidence 0.10, speed 0.10), a simplified TOPSIS-style weighting. |
+| **Scenario simulation ("digital twin")** | `intervention_agent.py` | `simulate_scenario()` / `compare_scenarios()` apply the overlap-compounding rule above to one or more selected interventions. |
+| **Health & economic impact** | `health_economic_engine.py` | Converts a predicted PM2.5 reduction into estimated admissions avoided, DALYs and cost savings. Deterministic, with its assumptions listed in the output. |
+| **Mayor Copilot** | `mayor_copilot.py` | Deterministic keyword-based intent matching over the outputs above. No LLM. |
+| **Dashboard** | `app.py` | Streamlit UI with Folium maps and Plotly charts, an hourly AQI projection from an XGBoost model trained on synthetic data (see limitations), and route planning that uses a PPO agent if a trained model is present, falling back to Dijkstra otherwise. |
 
-### What impact could it have?
-AirTwin X transforms abstract environmental data into direct civic action. By allowing administrators to simulate policies before deploying capital, it translates predicted AQI drops into empirical outcomes: estimating emergency admissions avoided, Disability-Adjusted Life Years (DALYs) reduced, and direct public healthcare budget savings.
-
----
-
-## Why AirTwin X?
-
-| Capability | Traditional AQI Dashboard | AirTwin X |
-| :--- | :--- | :--- |
-| **Primary Output** | "AQI is 340 (Severe)" | "Traffic is driving 46% of pollution. Restrict heavy vehicles." |
-| **AI Integration** | None (or generative LLM wrapper) | Deterministic Mayor Copilot (Zero Hallucination) |
-| **Intervention Planning** | Manual guesswork | Autonomous MCDA/TOPSIS ranking & Digital Twin Simulation |
-| **Metric Translation** | PM2.5 / PM10 levels | Hospitalizations avoided, DALYs reduced, ₹ Saved |
-| **Policy Compounding** | Naive addition (A+B = % drop) | Algebraic overlap-compounding logic |
-
----
-
-## Core Features
-
-| 🌍 Geospatial Attribution Engine | ⚡ Intervention Command Engine |
-| :--- | :--- |
-| **Pinpoints the source.** Granular attribution for traffic, industrial emissions, construction dust, and biomass burning, adjusted by weather stagnation factors. Includes explicit confidence scoring. | **Recommends the action.** Autonomously ranks municipal interventions based on a multi-criteria matrix evaluating AQI reduction potential, financial cost, physical feasibility, deployment speed, and confidence. |
-
-| 🏙️ Urban Digital Twin | 🏥 Health & Economic Impact Engine |
-| :--- | :--- |
-| **Simulates the future.** Test single or multi-intervention scenarios before implementation. Provides precise scenario comparisons and confidence bounds to prevent double-counting. | **Calculates the human ROI.** Translates predicted AQI drops into empirical outcomes: hospital admissions avoided, DALYs reduced, productivity gains, and direct budget savings. |
-
-| 🤖 Mayor Copilot | 🎛️ Executive Command Center |
-| :--- | :--- |
-| **Grounded decision support.** Strictly deterministic—no hallucinations. Every answer is synthesized purely from the outputs of preceding upstream modules. | **The 30-second briefing.** A unified dashboard delivering a snapshot of the crisis, recommended actions, and simulated economic impact instantly. |
-
----
-
-## System Architecture
+## System architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        DATA INGESTION                           │
 │  [Open-Meteo]   [WAQI API]   [NASA FIRMS]   [OpenStreetMap]     │
 └────────┬─────────────┬─────────────┬──────────────┬─────────────┘
-         │             │             │              │
          ▼             ▼             ▼              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                 GEOSPATIAL SOURCE ATTRIBUTION                   │
 │         (Traffic, Industrial, Construction, Biomass)            │
 └────────────────────────────────┬────────────────────────────────┘
-                                 │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│             AUTONOMOUS INTERVENTION COMMAND ENGINE              │
-│        (MCDA Ranking: Impact, Cost, Speed, Feasibility)         │
+│                  INTERVENTION RANKING (MCDA)                    │
+│            (Impact, Cost, Feasibility, Confidence, Speed)       │
 └────────────────────────────────┬────────────────────────────────┘
-                                 │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      URBAN DIGITAL TWIN                         │
-│     (Multi-scenario Simulation & Overlap-Compounding Math)      │
+│                    SCENARIO SIMULATION                          │
+│              (Overlap-compounding, capped reduction)            │
 └────────────────────────────────┬────────────────────────────────┘
-                                 │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                HEALTH & ECONOMIC IMPACT ENGINE                  │
-│       (DALYs, Hospitalizations Avoided, Financial ROI)          │
+│        (Admissions avoided, DALYs, estimated savings)           │
 └────────────────────────────────┬────────────────────────────────┘
-                                 │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│            MAYOR COPILOT & EXECUTIVE COMMAND CENTER             │
-│        (Deterministic AI Briefing & Policy Execution)           │
+│             MAYOR COPILOT & COMMAND CENTER (UI)                 │
+│           (Rule-based answers grounded in the above)            │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+See [Architecture.md](Architecture.md) for each module's inputs, outputs and
+design decisions.
+
+## Quick Start
+
+```bash
+git clone https://github.com/Soham-o/AirTwin-X.git
+cd AirTwin-X
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Then open `http://localhost:8501`. New Delhi is selected by default.
+
+`requirements.txt` includes `torch` and `stable-baselines3`, so the first
+install is large. A `.devcontainer/` configuration is also included.
+
+## Data sources and configuration
+
+| Source | Used for | Configuration |
+|---|---|---|
+| [WAQI](https://aqicn.org/api/) | Live sensor readings | Optional `WAQI_TOKEN` in `.streamlit/secrets.toml` or as an environment variable. Without it, the app shows a warning and uses **simulated** sensor data. |
+| [Open-Meteo](https://open-meteo.com/) | Wind and temperature | No key needed. |
+| OpenStreetMap (via `osmnx`) | Road network for traffic attribution | No key needed. `new_delhi_5km.graphml` is included as a local graph. |
+| [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/) | Fire hotspots for biomass attribution | See [Known limitations](#known-limitations). The code falls back to an Open-Meteo-based heuristic when FIRMS data is unavailable. |
+
+Never commit `.streamlit/secrets.toml` or real API tokens.
+
+## Testing
+
+```bash
+pip install pytest numpy requests
+python -m pytest test_airtwin.py -q
+```
+
+`test_airtwin.py` contains 27 tests covering determinism, intervention
+ranking weights, overlap-compounding bounds, CPCB AQI→PM2.5 breakpoints,
+health-impact monotonicity, and Copilot intent routing. They need only
+`numpy`, `requests` and `pytest`, not the full Streamlit stack. There is no
+CI workflow yet.
+
+## Project status
+
+**Prototype.** The pipeline modules and their tests run locally. Outputs are
+model-based estimates for exploring policy options, not validated forecasts,
+and should not be used for real public-health or budget decisions.
+
+## Known limitations
+
+- **NASA FIRMS key is not configured.** The FIRMS request URL in
+  `attribution_engine.py` contains a placeholder instead of a real FIRMS
+  `MAP_KEY`, so the request is expected to fail and the biomass factor
+  falls back to the heuristic. A real key should be read from secrets or an
+  environment variable rather than written into the URL.
+- **No trained RL model is committed.** `app.py` looks for a
+  `clean_air_agent` PPO model; without it, routing uses Dijkstra. Train one
+  with `train_agent.py`.
+- **The XGBoost AQI projection is trained on synthetic data** generated in
+  `app.py` (daily cycles plus noise around the current reading), not on
+  historical sensor data.
+- **Attribution weights and intervention effectiveness values are fixed
+  assumptions** in the source code, not values fitted to measured data.
+- **Fallbacks are silent in places.** If WAQI is unavailable the dashboard
+  switches to simulated data with a warning; check the data-source labels in
+  the UI before trusting a number.
+- No license file has been added yet.
+
+## Documentation
+
+- [Architecture.md](Architecture.md) — module responsibilities and design decisions
+- [Demo guide.md](Demo%20guide.md) — a five-minute walkthrough of the interface
