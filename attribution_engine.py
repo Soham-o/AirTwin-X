@@ -32,6 +32,8 @@ from __future__ import annotations
 
 import datetime
 import math
+import os
+from urllib.parse import quote
 import requests
 import numpy as np
 from dataclasses import dataclass, field
@@ -116,10 +118,11 @@ CONSTRUCTION_TAGS = {"construction", "building_construction"}
 # Search radius (degrees ≈ km) for spatial queries around a point
 SEARCH_RADIUS_DEG = 0.05   # ≈ 5.5 km
 
-# NASA FIRMS CSV endpoint (no auth required for NRT data up to 7 days)
-FIRMS_URL = (
-    "https://firms.modaps.eosdis.nasa.gov/api/country/csv"
-    "/c3VwZXJzZWNyZXQ/VIIRS_SNPP_NRT/IND/1"
+# NASA FIRMS CSV endpoint template. A real MAP_KEY must be supplied through
+# NASA_FIRMS_MAP_KEY; never commit credentials or placeholder keys.
+FIRMS_URL_TEMPLATE = (
+    "https://firms.modaps.eosdis.nasa.gov/api/country/csv/{map_key}"
+    "/VIIRS_SNPP_NRT/IND/1"
 )
 
 
@@ -448,8 +451,17 @@ class SourceAttributionEngine:
             return
         self._firms_attempted = True
 
+        map_key = os.environ.get("NASA_FIRMS_MAP_KEY", "").strip()
+        if not map_key:
+            data_sources.append(
+                "NASA FIRMS unavailable (NASA_FIRMS_MAP_KEY is not configured)"
+            )
+            confidence_deductions.append(8)
+            return
+
+        firms_url = FIRMS_URL_TEMPLATE.format(map_key=quote(map_key, safe=""))
         try:
-            resp = requests.get(FIRMS_URL, timeout=15)
+            resp = requests.get(firms_url, timeout=15)
             if resp.status_code == 200 and "latitude" in resp.text:
                 lines = resp.text.strip().split("\n")
                 if len(lines) > 1:
