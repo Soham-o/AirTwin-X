@@ -306,3 +306,56 @@ class TestWeekendDetection:
         from intervention_agent import _is_weekend_today
         expected = datetime.date.today().weekday() >= 5
         assert _is_weekend_today() == expected
+
+# ─────────────────────────────────────────────────────────────────────────
+# 8. Optional NASA FIRMS configuration
+# ─────────────────────────────────────────────────────────────────────────
+
+class TestFirmsConfiguration:
+    def test_missing_key_skips_network_call_and_uses_fallback(self, monkeypatch):
+        import attribution_engine
+
+        monkeypatch.delenv("NASA_FIRMS_MAP_KEY", raising=False)
+        calls = []
+        monkeypatch.setattr(
+            attribution_engine.requests,
+            "get",
+            lambda *args, **kwargs: calls.append((args, kwargs)),
+        )
+
+        engine = attribution_engine.SourceAttributionEngine()
+        sources = []
+        deductions = []
+        engine._load_fire_data(sources, deductions)
+
+        assert calls == []
+        assert any("NASA_FIRMS_MAP_KEY is not configured" in item for item in sources)
+        assert deductions == [8]
+        assert engine._fire_hotspots == []
+
+    def test_configured_key_is_used_and_csv_is_parsed(self, monkeypatch):
+        import attribution_engine
+
+        monkeypatch.setenv("NASA_FIRMS_MAP_KEY", "test/key")
+        requested = {}
+
+        class Response:
+            status_code = 200
+            text = "latitude,longitude,frp\\n28.6,77.2,5.0\\n"
+
+        def fake_get(url, timeout):
+            requested["url"] = url
+            requested["timeout"] = timeout
+            return Response()
+
+        monkeypatch.setattr(attribution_engine.requests, "get", fake_get)
+        engine = attribution_engine.SourceAttributionEngine()
+        sources = []
+        deductions = []
+        engine._load_fire_data(sources, deductions)
+
+        assert "%2F" in requested["url"]
+        assert requested["timeout"] == 15
+        assert engine._fire_hotspots == [{"lat": 28.6, "lon": 77.2, "frp": 5.0}]
+        assert sources == ["NASA FIRMS VIIRS NRT (1 hotspots)"]
+        assert deductions == []
