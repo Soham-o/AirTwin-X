@@ -138,9 +138,9 @@ python -m pytest test_airtwin.py -q
 `test_airtwin.py` contains 29 tests covering determinism, intervention
 ranking weights, overlap-compounding bounds, CPCB AQI→PM2.5 breakpoints,
 health-impact monotonicity, Copilot intent routing, and missing/configured
-NASA FIRMS key behavior. They need only
-`numpy`, `requests` and `pytest`, not the full Streamlit stack. There is no
-CI workflow yet.
+NASA FIRMS key behavior. They need only `numpy`, `requests` and `pytest`, not
+the full Streamlit stack. GitHub Actions runs these regression tests on
+pull requests and pushes to `main` or `fix/**` branches.
 
 ## Project status
 
