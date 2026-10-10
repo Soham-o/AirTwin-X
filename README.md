@@ -124,7 +124,7 @@ install is large. A `.devcontainer/` configuration is also included.
 | [WAQI](https://aqicn.org/api/) | Live sensor readings | Optional `WAQI_TOKEN` in `.streamlit/secrets.toml` or as an environment variable. Without it, the app shows a warning and uses **simulated** sensor data. |
 | [Open-Meteo](https://open-meteo.com/) | Wind and temperature | No key needed. |
 | OpenStreetMap (via `osmnx`) | Road network for traffic attribution | No key needed. `new_delhi_5km.graphml` is included as a local graph. |
-| [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/) | Fire hotspots for biomass attribution | See [Known limitations](#known-limitations). The code falls back to an Open-Meteo-based heuristic when FIRMS data is unavailable. |
+| [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/api/) | Fire hotspots for biomass attribution | Optional `NASA_FIRMS_MAP_KEY` environment variable. Without a key, the app skips the request and uses the Open-Meteo-based heuristic. |
 
 Never commit `.streamlit/secrets.toml` or real API tokens.
 
@@ -135,9 +135,10 @@ pip install pytest numpy requests
 python -m pytest test_airtwin.py -q
 ```
 
-`test_airtwin.py` contains 27 tests covering determinism, intervention
+`test_airtwin.py` contains 29 tests covering determinism, intervention
 ranking weights, overlap-compounding bounds, CPCB AQI→PM2.5 breakpoints,
-health-impact monotonicity, and Copilot intent routing. They need only
+health-impact monotonicity, Copilot intent routing, and missing/configured
+NASA FIRMS key behavior. They need only
 `numpy`, `requests` and `pytest`, not the full Streamlit stack. There is no
 CI workflow yet.
 
@@ -149,11 +150,7 @@ and should not be used for real public-health or budget decisions.
 
 ## Known limitations
 
-- **NASA FIRMS key is not configured.** The FIRMS request URL in
-  `attribution_engine.py` contains a placeholder instead of a real FIRMS
-  `MAP_KEY`, so the request is expected to fail and the biomass factor
-  falls back to the heuristic. A real key should be read from secrets or an
-  environment variable rather than written into the URL.
+- **NASA FIRMS data is optional.** Set `NASA_FIRMS_MAP_KEY` in the environment to enable fire-hotspot requests. Without it, the app skips the request and uses the documented Open-Meteo-based heuristic. Do not commit the key.
 - **No trained RL model is committed.** `app.py` looks for a
   `clean_air_agent` PPO model; without it, routing uses Dijkstra. Train one
   with `train_agent.py`.
